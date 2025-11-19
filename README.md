@@ -1,34 +1,7 @@
-# my_template
-Follow the instructions carefully
-
-my-project/
-├── src/
-│   ├── index.js          # Main entry point
-│   ├── index.html        # Main HTML template
-│   ├── styles/
-│   │   └── main.css      # Global styles
-│   ├── modules/          # JavaScript modules
-│   ├── components/       # UI components
-│   ├── assets/
-│   │   ├── images/       # Images
-│   │   ├── fonts/        # Font files
-│   │   └── icons/        # SVG icons
-│   └── utils/            # Utility functions
-├── dist/                 # Built files (auto-generated)
-├── .github/
-│   └── workflows/        # GitHub Actions
-├── webpack.common.js     # Shared Webpack config
-├── webpack.dev.js        # Development config
-├── webpack.prod.js       # Production config
-├── package.json
-├── README.md
-└── deploy.sh            # Deployment script
+# battleships
 
 
-
-
-
-your real project readme must contain these
+The Odin Projects Battleships Assignment
 # Project Name
 
 A brief description of your project.

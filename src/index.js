@@ -1,14 +1,9 @@
-// Main entry point for your application
-import './styles/main.css';
-import { initApp } from './modules/app';
+import Game from './modules/game.js';
+import DOM from './modules/dom.js';
 
-// Initialize your application
-document.addEventListener('DOMContentLoaded', initApp);
+// Initialize the game
+const game = new Game();
+const dom = new DOM(game);
 
-// Hot Module Replacement for development
-if (module.hot) {
-  module.hot.accept('./modules/app', () => {
-    const newInitApp = require('./modules/app').initApp;
-    newInitApp();
-  });
-}
+// Make game available globally for debugging
+window.game = game;
