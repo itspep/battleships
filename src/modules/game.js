@@ -1,55 +1,18 @@
 import Player from './player.js';
 
 export default class Game {
-    constructor() {
-        this.players = {
-          human: new Player('human'),
-          computer: new Player('computer')
-        };
-        this.currentPlayer = 'human';
-        this.gameOver = false;
-        this.winner = null;
-        
-        // Initialize computer ships immediately
-        this.initializeComputerShips();
-      }
-      
-      // Separate method for computer ships
-      initializeComputerShips() {
-        const computerShips = [
-          { length: 5, coordinates: [0, 5], direction: 'horizontal' },
-          { length: 4, coordinates: [2, 5], direction: 'horizontal' },
-          { length: 3, coordinates: [4, 5], direction: 'horizontal' },
-          { length: 3, coordinates: [6, 5], direction: 'horizontal' },
-          { length: 2, coordinates: [8, 5], direction: 'horizontal' }
-        ];
-      
-        computerShips.forEach(ship => {
-          this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
-        });
-        
-        console.log('Computer ships initialized');
-      }
-      
-      // Update initializeShips to only handle human ships
-      initializeShips() {
-        console.log('Initializing human ships...');
-        
-        // Predefined ship placements for human
-        const humanShips = [
-          { length: 5, coordinates: [0, 0], direction: 'horizontal' },
-          { length: 4, coordinates: [2, 0], direction: 'horizontal' },
-          { length: 3, coordinates: [4, 0], direction: 'horizontal' },
-          { length: 3, coordinates: [6, 0], direction: 'horizontal' },
-          { length: 2, coordinates: [8, 0], direction: 'horizontal' }
-        ];
-      
-        humanShips.forEach(ship => {
-          this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
-        });
-      
-        console.log('Human ships initialized');
-      }
+  constructor() {
+    this.players = {
+      human: new Player('human'),
+      computer: new Player('computer')
+    };
+    this.currentPlayer = 'human';
+    this.gameOver = false;
+    this.winner = null;
+    
+    // Initialize computer ships immediately
+    this.initializeComputerShips();
+  }
 
   switchTurn() {
     this.currentPlayer = this.currentPlayer === 'human' ? 'computer' : 'human';
@@ -76,16 +39,22 @@ export default class Game {
       
       this.checkGameOver();
       
-      if (!this.gameOver) {
+      // Only switch turns on a MISS
+      if (!hit && !this.gameOver) {
         this.switchTurn();
-        // Don't call computerAttack here - let DOM handle it
+        return { 
+          hit, 
+          gameOver: this.gameOver, 
+          winner: this.winner,
+          turnSwitched: true
+        };
       }
       
       return { 
         hit, 
         gameOver: this.gameOver, 
         winner: this.winner,
-        turnSwitched: true
+        turnSwitched: false // Turn doesn't switch on hit
       };
     } catch (error) {
       console.log('Attack error:', error.message);
@@ -100,25 +69,28 @@ export default class Game {
       console.log('Computer cannot attack - game over:', this.gameOver, 'current player:', this.currentPlayer);
       return null;
     }
-  
+
     const attack = this.players.computer.makeRandomAttack();
     
     if (!attack) {
       console.log('Computer could not find valid attack');
-      this.switchTurn(); // Switch back to human if computer can't attack
+      // If no valid attacks, check if game should end
+      this.checkGameOver();
+      if (!this.gameOver) {
+        this.switchTurn(); // Switch back to human if computer can't attack but game isn't over
+      }
       return { error: 'No valid attacks remaining' };
     }
     
     console.log('Computer attacking:', attack);
     
-    // Note: makeRandomAttack already records the attack in previousAttacks
-    // So we don't need to call makeAttack again
     const hit = this.players.human.gameboard.receiveAttack(attack);
     
     console.log('Computer attack result - hit:', hit);
     this.checkGameOver();
     
-    if (!this.gameOver) {
+    // Only switch turns on a MISS
+    if (!hit && !this.gameOver) {
       this.switchTurn();
     }
     
@@ -126,7 +98,8 @@ export default class Game {
       attack, 
       hit, 
       gameOver: this.gameOver, 
-      winner: this.winner 
+      winner: this.winner,
+      turnSwitched: !hit // Turn switches only on miss
     };
   }
 
@@ -145,21 +118,31 @@ export default class Game {
       this.winner = 'human';
       console.log('Game over - Human wins!');
     }
+    
+    // Additional check: if all possible attacks have been made
+    const humanAttacks = this.players.human.previousAttacks.size;
+    const computerAttacks = this.players.computer.previousAttacks.size;
+    const totalPossibleAttacks = 100; // 10x10 grid
+    
+    if (humanAttacks >= totalPossibleAttacks || computerAttacks >= totalPossibleAttacks) {
+      this.gameOver = true;
+      // Determine winner by ships remaining
+      const humanShipsRemaining = this.players.human.gameboard.ships.filter(ship => !ship.isSunk()).length;
+      const computerShipsRemaining = this.players.computer.gameboard.ships.filter(ship => !ship.isSunk()).length;
+      
+      if (humanShipsRemaining > computerShipsRemaining) {
+        this.winner = 'human';
+      } else if (computerShipsRemaining > humanShipsRemaining) {
+        this.winner = 'computer';
+      } else {
+        this.winner = 'tie';
+      }
+      console.log('Game over - All attacks exhausted. Winner:', this.winner);
+    }
   }
 
-  // Initialize ships for both players
-  initializeShips() {
-    console.log('Initializing ships for both players');
-    
-    // Predefined ship placements for demo
-    const humanShips = [
-      { length: 5, coordinates: [0, 0], direction: 'horizontal' },
-      { length: 4, coordinates: [2, 0], direction: 'horizontal' },
-      { length: 3, coordinates: [4, 0], direction: 'horizontal' },
-      { length: 3, coordinates: [6, 0], direction: 'horizontal' },
-      { length: 2, coordinates: [8, 0], direction: 'horizontal' }
-    ];
-
+  // Separate method for computer ships
+  initializeComputerShips() {
     const computerShips = [
       { length: 5, coordinates: [0, 5], direction: 'horizontal' },
       { length: 4, coordinates: [2, 5], direction: 'horizontal' },
@@ -168,14 +151,30 @@ export default class Game {
       { length: 2, coordinates: [8, 5], direction: 'horizontal' }
     ];
 
+    computerShips.forEach(ship => {
+      this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
+    });
+    
+    console.log('Computer ships initialized');
+  }
+
+  // Update initializeShips to only handle human ships
+  initializeShips() {
+    console.log('Initializing human ships...');
+    
+    // Predefined ship placements for human
+    const humanShips = [
+      { length: 5, coordinates: [0, 0], direction: 'horizontal' },
+      { length: 4, coordinates: [2, 0], direction: 'horizontal' },
+      { length: 3, coordinates: [4, 0], direction: 'horizontal' },
+      { length: 3, coordinates: [6, 0], direction: 'horizontal' },
+      { length: 2, coordinates: [8, 0], direction: 'horizontal' }
+    ];
+
     humanShips.forEach(ship => {
       this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
     });
 
-    computerShips.forEach(ship => {
-      this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
-    });
-
-    console.log('Ships initialized for both players');
+    console.log('Human ships initialized');
   }
 }

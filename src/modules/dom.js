@@ -468,6 +468,7 @@ export default class DOM {
         
         if (this.game.gameOver) {
             console.log('Game is over, cannot attack');
+            this.showGameOver(this.game.winner);
             return;
         }
     
@@ -491,8 +492,12 @@ export default class DOM {
         if (result.gameOver) {
             this.showGameOver(result.winner);
         } else if (result.turnSwitched) {
-            // Only then trigger computer turn
+            // Only trigger computer turn if turn was switched (on miss)
             this.updateGameStatus();
+        } else if (result.hit) {
+            // If hit, player gets another turn - update status but don't switch
+            this.gameStatus.textContent = 'Hit! Take another shot!';
+            this.turnIndicator.textContent = 'Your Turn (Extra)';
         }
     }
     
@@ -515,8 +520,18 @@ export default class DOM {
                 
                 if (result && result.gameOver) {
                     this.showGameOver(result.winner);
+                } else if (result && result.turnSwitched) {
+                    // Computer missed - switch back to human
+                    this.turnIndicator.textContent = 'Your Turn';
+                    this.gameStatus.textContent = 'Computer missed! Your turn.';
+                } else if (result && result.hit) {
+                    // Computer hit - gets another turn
+                    this.turnIndicator.textContent = 'Computer\'s Turn (Extra)';
+                    this.gameStatus.textContent = 'Computer hit your ship! Computer gets another turn.';
+                    // Recursively call updateGameStatus for computer's extra turn
+                    setTimeout(() => this.updateGameStatus(), 1000);
                 } else {
-                    // Update status again after computer move
+                    // Fallback
                     this.turnIndicator.textContent = 'Your Turn';
                     this.gameStatus.textContent = 'Your turn - Attack enemy waters!';
                 }
@@ -524,5 +539,22 @@ export default class DOM {
         } else {
             this.gameStatus.textContent = 'Your turn - Attack enemy waters!';
         }
+    }
+    
+    // Update the showGameOver method to handle ties
+    showGameOver(winner) {
+        console.log('Game over, winner:', winner);
+        
+        if (winner === 'tie') {
+            this.modalTitle.textContent = 'Game Over - Tie!';
+            this.modalMessage.textContent = 'All ships sunk! It\'s a tie game!';
+        } else {
+            this.modalTitle.textContent = winner === 'human' ? 'Victory! 🎉' : 'Defeat! 💥';
+            this.modalMessage.textContent = winner === 'human' 
+                ? 'Congratulations! You sunk all enemy ships!'
+                : 'The computer sunk all your ships. Better luck next time!';
+        }
+        
+        this.modal.classList.add('show');
     }
 }
