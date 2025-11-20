@@ -23,44 +23,50 @@ export default class Game {
     console.log('humanAttack called with:', [x, y]);
     
     if (this.gameOver) {
-      console.log('Game over, cannot attack');
-      return { error: 'Game is over' };
+        console.log('Game over, cannot attack');
+        return { error: 'Game is over' };
     }
 
     if (this.currentPlayer !== 'human') {
-      console.log('Not human turn, current player:', this.currentPlayer);
-      return { error: 'Not your turn' };
+        console.log('Not human turn, current player:', this.currentPlayer);
+        return { error: 'Not your turn' };
     }
 
     try {
-      this.players.human.makeAttack([x, y]);
-      const hit = this.players.computer.gameboard.receiveAttack([x, y]);
-      console.log('Attack result - hit:', hit);
-      
-      this.checkGameOver();
-      
-      // Only switch turns on a MISS
-      if (!hit && !this.gameOver) {
-        this.switchTurn();
+        this.players.human.makeAttack([x, y]);
+        
+        // Check if receiveAttack exists
+        if (typeof this.players.computer.gameboard.receiveAttack !== 'function') {
+            throw new Error('Computer gameboard missing receiveAttack method');
+        }
+        
+        const hit = this.players.computer.gameboard.receiveAttack([x, y]);
+        console.log('Attack result - hit:', hit);
+        
+        this.checkGameOver();
+        
+        // Only switch turns on a MISS
+        if (!hit && !this.gameOver) {
+            this.switchTurn();
+            return { 
+                hit, 
+                gameOver: this.gameOver, 
+                winner: this.winner,
+                turnSwitched: true
+            };
+        }
+        
         return { 
-          hit, 
-          gameOver: this.gameOver, 
-          winner: this.winner,
-          turnSwitched: true
+            hit, 
+            gameOver: this.gameOver, 
+            winner: this.winner,
+            turnSwitched: false // Turn doesn't switch on hit
         };
-      }
-      
-      return { 
-        hit, 
-        gameOver: this.gameOver, 
-        winner: this.winner,
-        turnSwitched: false // Turn doesn't switch on hit
-      };
     } catch (error) {
-      console.log('Attack error:', error.message);
-      return { error: error.message };
+        console.log('Attack error:', error.message);
+        return { error: error.message };
     }
-  }
+}
 
   computerAttack() {
     console.log('computerAttack called');
@@ -141,40 +147,48 @@ export default class Game {
     }
   }
 
-  // Separate method for computer ships
   initializeComputerShips() {
     const computerShips = [
-      { length: 5, coordinates: [0, 5], direction: 'horizontal' },
-      { length: 4, coordinates: [2, 5], direction: 'horizontal' },
-      { length: 3, coordinates: [4, 5], direction: 'horizontal' },
-      { length: 3, coordinates: [6, 5], direction: 'horizontal' },
-      { length: 2, coordinates: [8, 5], direction: 'horizontal' }
+        { length: 5, coordinates: [0, 0], direction: 'horizontal' },
+        { length: 4, coordinates: [2, 0], direction: 'horizontal' },
+        { length: 3, coordinates: [4, 0], direction: 'horizontal' },
+        { length: 3, coordinates: [6, 0], direction: 'horizontal' },
+        { length: 2, coordinates: [8, 0], direction: 'horizontal' }
     ];
+
+    // Clear existing ships first
+    this.players.computer.gameboard.ships = [];
+    this.players.computer.gameboard.shipPositions = new Map();
+    this.players.computer.gameboard.allCoordinates = new Set();
 
     computerShips.forEach(ship => {
-      this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
+        this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
     });
     
-    console.log('Computer ships initialized');
-  }
+    console.log('Computer ships initialized:', this.players.computer.gameboard.ships.length);
+}
 
-  // Update initializeShips to only handle human ships
-  initializeShips() {
+initializeShips() {
     console.log('Initializing human ships...');
     
-    // Predefined ship placements for human
     const humanShips = [
-      { length: 5, coordinates: [0, 0], direction: 'horizontal' },
-      { length: 4, coordinates: [2, 0], direction: 'horizontal' },
-      { length: 3, coordinates: [4, 0], direction: 'horizontal' },
-      { length: 3, coordinates: [6, 0], direction: 'horizontal' },
-      { length: 2, coordinates: [8, 0], direction: 'horizontal' }
+        { length: 5, coordinates: [0, 5], direction: 'horizontal' },
+        { length: 4, coordinates: [2, 5], direction: 'horizontal' },
+        { length: 3, coordinates: [4, 5], direction: 'horizontal' },
+        { length: 3, coordinates: [6, 5], direction: 'horizontal' },
+        { length: 2, coordinates: [8, 5], direction: 'horizontal' }
     ];
 
+    // Clear existing ships first
+    this.players.human.gameboard.ships = [];
+    this.players.human.gameboard.shipPositions = new Map();
+    this.players.human.gameboard.allCoordinates = new Set();
+
     humanShips.forEach(ship => {
-      this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
+        this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
     });
 
-    console.log('Human ships initialized');
-  }
+    console.log('Human ships initialized:', this.players.human.gameboard.ships.length);
+}
+
 }

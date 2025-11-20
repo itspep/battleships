@@ -557,4 +557,69 @@ export default class DOM {
         
         this.modal.classList.add('show');
     }
+
+    rotateShip() {
+        this.currentDirection = this.currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
+        this.gameStatus.textContent = `Ship direction: ${this.currentDirection}`;
+        console.log('Ship direction changed to:', this.currentDirection);
+        
+        // Update UI feedback
+        if (this.rotateBtn) {
+            this.rotateBtn.textContent = `Rotate Ship (R) - ${this.currentDirection}`;
+        }
+    }
+
+    updateShipStatus() {
+        this.updatePlayerShipStatus();
+        this.updateComputerShipStatus();
+    }
+    
+    updatePlayerShipStatus() {
+        this.playerShipStatus.innerHTML = '<h4>Your Ships</h4>';
+        const playerShips = this.game.players.human.gameboard.ships;
+        const playerSunkShips = playerShips.filter(ship => ship.isSunk()).length;
+        
+        const statusItem = document.createElement('div');
+        statusItem.className = 'ship-status-item';
+        statusItem.textContent = `Sunk: ${playerSunkShips}/${playerShips.length}`;
+        this.playerShipStatus.appendChild(statusItem);
+    }
+    
+    updateComputerShipStatus() {
+        this.computerShipStatus.innerHTML = '<h4>Enemy Ships</h4>';
+        const computerShips = this.game.players.computer.gameboard.ships;
+        const computerSunkShips = computerShips.filter(ship => ship.isSunk()).length;
+        
+        const statusItem = document.createElement('div');
+        statusItem.className = 'ship-status-item';
+        statusItem.textContent = `Sunk: ${computerSunkShips}/${computerShips.length}`;
+        this.computerShipStatus.appendChild(statusItem);
+    }
+
+    updateShipStatus() {
+        this.updatePlayerShipStatus();
+        this.updateComputerShipStatus();
+    }
+    
+    updatePlayerShipStatus() {
+        this.playerShipStatus.innerHTML = '<h4>Your Ships</h4>';
+        const playerShips = this.game.players.human.gameboard.ships;
+        const playerSunkShips = playerShips.filter(ship => ship.isSunk()).length;
+        
+        const statusItem = document.createElement('div');
+        statusItem.className = 'ship-status-item';
+        statusItem.textContent = `Sunk: ${playerSunkShips}/${playerShips.length}`;
+        this.playerShipStatus.appendChild(statusItem);
+    }
+    
+    updateComputerShipStatus() {
+        this.computerShipStatus.innerHTML = '<h4>Enemy Ships</h4>';
+        const computerShips = this.game.players.computer.gameboard.ships;
+        const computerSunkShips = computerShips.filter(ship => ship.isSunk()).length;
+        
+        const statusItem = document.createElement('div');
+        statusItem.className = 'ship-status-item';
+        statusItem.textContent = `Sunk: ${computerSunkShips}/${computerShips.length}`;
+        this.computerShipStatus.appendChild(statusItem);
+    } 
 }
