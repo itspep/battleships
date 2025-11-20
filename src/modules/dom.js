@@ -3,9 +3,18 @@ export default class DOM {
         this.game = game;
         this.initializeElements();
         this.setupEventListeners();
+        this.currentShip = null;
+        this.currentDirection = 'horizontal';
+        this.placedShips = new Set();
+        
+        // Initial render
+        this.createShipList();
+        this.renderBoards();
     }
 
     initializeElements() {
+        console.log('Initializing DOM elements...');
+        
         // Boards
         this.playerBoard = document.getElementById('playerBoard');
         this.computerBoard = document.getElementById('computerBoard');
@@ -29,13 +38,16 @@ export default class DOM {
         this.modalMessage = document.getElementById('modalMessage');
         this.playAgainBtn = document.getElementById('playAgainBtn');
 
-        // Game state
-        this.currentShip = null;
-        this.currentDirection = 'horizontal';
-        this.placedShips = new Set();
+        console.log('Elements initialized:', {
+            playerBoard: !!this.playerBoard,
+            computerBoard: !!this.computerBoard,
+            turnIndicator: !!this.turnIndicator
+        });
     }
 
     setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (e.key === 'r' || e.key === 'R') {
@@ -50,9 +62,7 @@ export default class DOM {
         this.resetBtn.addEventListener('click', () => this.resetGame());
         this.playAgainBtn.addEventListener('click', () => this.resetGame());
 
-        // Initial setup
-        this.createShipList();
-        this.renderBoards();
+        console.log('Event listeners setup complete');
     }
 
     createShipList() {
@@ -86,13 +96,20 @@ export default class DOM {
             shipItem.appendChild(shipPreview);
             shipItem.appendChild(shipName);
             
-            shipItem.addEventListener('click', () => this.selectShip(ship));
+            shipItem.addEventListener('click', () => {
+                console.log('Ship selected:', ship.name);
+                this.selectShip(ship);
+            });
+            
             this.shipList.appendChild(shipItem);
         });
     }
 
     selectShip(ship) {
-        if (this.placedShips.has(ship.name)) return;
+        if (this.placedShips.has(ship.name)) {
+            console.log('Ship already placed:', ship.name);
+            return;
+        }
 
         // Remove previous selection
         document.querySelectorAll('.ship-item').forEach(item => {
@@ -102,23 +119,29 @@ export default class DOM {
         // Set new selection
         this.currentShip = ship;
         const shipElement = document.querySelector(`[data-name="${ship.name}"]`);
-        shipElement.classList.add('placing');
+        if (shipElement) {
+            shipElement.classList.add('placing');
+        }
 
         this.gameStatus.textContent = `Placing ${ship.name} - Click on your board to place`;
+        console.log('Ship ready for placement:', ship.name);
     }
 
     rotateShip() {
         this.currentDirection = this.currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
         this.gameStatus.textContent = `Ship direction: ${this.currentDirection}`;
+        console.log('Ship direction changed to:', this.currentDirection);
     }
 
     renderBoards() {
+        console.log('Rendering boards...');
         this.renderPlayerBoard();
         this.renderComputerBoard();
         this.updateShipStatus();
     }
 
     renderPlayerBoard() {
+        console.log('Rendering player board...');
         this.playerBoard.innerHTML = '';
         
         for (let x = 0; x < 10; x++) {
@@ -140,13 +163,19 @@ export default class DOM {
                     cell.classList.add(hasShip ? 'hit' : 'miss');
                 }
                 
-                cell.addEventListener('click', () => this.placeShip(x, y));
+                cell.addEventListener('click', (e) => {
+                    console.log('Player board clicked:', x, y);
+                    this.placeShip(x, y);
+                });
+                
                 this.playerBoard.appendChild(cell);
             }
         }
+        console.log('Player board rendered with', this.playerBoard.children.length, 'cells');
     }
 
     renderComputerBoard() {
+        console.log('Rendering computer board...');
         this.computerBoard.innerHTML = '';
         
         for (let x = 0; x < 10; x++) {
@@ -163,17 +192,25 @@ export default class DOM {
                     cell.classList.add(hasShip ? 'hit' : 'miss');
                 }
                 
-                if (!this.game.gameOver && this.game.currentPlayer === 'human') {
-                    cell.addEventListener('click', () => this.attackComputer(x, y));
-                }
+                cell.addEventListener('click', (e) => {
+                    console.log('Computer board clicked:', x, y, 'Game over:', this.game.gameOver, 'Current player:', this.game.currentPlayer);
+                    if (!this.game.gameOver && this.game.currentPlayer === 'human') {
+                        this.attackComputer(x, y);
+                    } else {
+                        console.log('Click ignored - Game over:', this.game.gameOver, 'Current player:', this.game.currentPlayer);
+                    }
+                });
                 
                 this.computerBoard.appendChild(cell);
             }
         }
+        console.log('Computer board rendered with', this.computerBoard.children.length, 'cells');
     }
 
     checkIfCellHasShip(x, y, player) {
         const gameboard = this.game.players[player].gameboard;
+        if (!gameboard.shipPositions) return false;
+        
         for (const [ship, coordinates] of gameboard.shipPositions) {
             for (const [shipX, shipY] of coordinates) {
                 if (shipX === x && shipY === y) {
@@ -191,7 +228,18 @@ export default class DOM {
     }
 
     placeShip(x, y) {
-        if (!this.currentShip || this.placedShips.has(this.currentShip.name)) return;
+        console.log('Attempting to place ship at:', x, y, 'Current ship:', this.currentShip);
+        
+        if (!this.currentShip) {
+            console.log('No ship selected');
+            this.gameStatus.textContent = 'Please select a ship first!';
+            return;
+        }
+
+        if (this.placedShips.has(this.currentShip.name)) {
+            console.log('Ship already placed:', this.currentShip.name);
+            return;
+        }
 
         try {
             this.game.players.human.gameboard.placeShip(
@@ -201,6 +249,7 @@ export default class DOM {
             );
             
             this.placedShips.add(this.currentShip.name);
+            console.log('Ship placed successfully:', this.currentShip.name);
             this.renderPlayerBoard();
             
             // Select next unplaced ship
@@ -208,18 +257,25 @@ export default class DOM {
                 .find(item => !this.placedShips.has(item.dataset.name));
             
             if (nextShip) {
-                nextShip.click();
+                this.selectShip({
+                    name: nextShip.dataset.name,
+                    length: parseInt(nextShip.dataset.length)
+                });
             } else {
                 this.currentShip = null;
                 this.startBtn.disabled = false;
                 this.gameStatus.textContent = 'All ships placed! Click "Start Game" to begin.';
+                console.log('All ships placed');
             }
         } catch (error) {
+            console.error('Placement error:', error);
             this.gameStatus.textContent = 'Invalid placement! Try different coordinates.';
         }
     }
 
     randomizeShips() {
+        console.log('Randomizing ships...');
+        
         // Clear existing ships
         this.game.players.human.gameboard.ships = [];
         this.game.players.human.gameboard.shipPositions = new Map();
@@ -235,7 +291,10 @@ export default class DOM {
 
         ships.forEach(ship => {
             let placed = false;
-            while (!placed) {
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            while (!placed && attempts < maxAttempts) {
                 const x = Math.floor(Math.random() * 10);
                 const y = Math.floor(Math.random() * 10);
                 const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
@@ -244,21 +303,38 @@ export default class DOM {
                     this.game.players.human.gameboard.placeShip(ship.length, [x, y], direction);
                     this.placedShips.add(ship.name);
                     placed = true;
+                    console.log('Random placement successful:', ship.name, 'at', x, y, direction);
                 } catch (error) {
-                    // Try again with new coordinates
+                    attempts++;
                 }
+            }
+            
+            if (!placed) {
+                console.error('Failed to place ship after', maxAttempts, 'attempts:', ship.name);
             }
         });
 
         this.renderPlayerBoard();
         this.startBtn.disabled = false;
         this.gameStatus.textContent = 'Ships randomly placed! Click "Start Game" to begin.';
+        console.log('Random placement complete');
     }
 
     attackComputer(x, y) {
-        if (this.game.gameOver || this.game.currentPlayer !== 'human') return;
+        console.log('Attacking computer at:', x, y);
+        
+        if (this.game.gameOver) {
+            console.log('Game is over, cannot attack');
+            return;
+        }
+
+        if (this.game.currentPlayer !== 'human') {
+            console.log('Not human turn, cannot attack');
+            return;
+        }
 
         const result = this.game.humanAttack([x, y]);
+        console.log('Attack result:', result);
         
         if (result.error) {
             this.gameStatus.textContent = result.error;
@@ -276,12 +352,18 @@ export default class DOM {
     updateGameStatus() {
         const currentPlayer = this.game.currentPlayer;
         this.turnIndicator.textContent = currentPlayer === 'human' ? 'Your Turn' : 'Computer\'s Turn';
+        console.log('Updating game status, current player:', currentPlayer);
         
-        if (currentPlayer === 'computer') {
+        if (currentPlayer === 'computer' && !this.game.gameOver) {
             this.gameStatus.textContent = 'Computer is thinking...';
+            console.log('Computer turn starting...');
+            
             // Simulate computer thinking delay
             setTimeout(() => {
+                console.log('Computer making attack...');
                 const result = this.game.computerAttack();
+                console.log('Computer attack result:', result);
+                
                 this.renderBoards();
                 this.updateGameStatus();
                 
@@ -333,8 +415,11 @@ export default class DOM {
     }
 
     startGame() {
+        console.log('Starting game...');
+        
         if (this.placedShips.size < 5) {
             this.gameStatus.textContent = 'Place all ships before starting!';
+            console.log('Not all ships placed:', this.placedShips.size);
             return;
         }
 
@@ -343,27 +428,101 @@ export default class DOM {
         this.startBtn.disabled = true;
         this.renderBoards();
         this.updateGameStatus();
+        console.log('Game started successfully');
     }
 
+
     resetGame() {
+        console.log('Resetting game...');
+        
+        // Create a new game instance
         this.game = new (this.game.constructor)();
         this.currentShip = null;
         this.currentDirection = 'horizontal';
         this.placedShips.clear();
-        this.modal.classList.remove('show');
-        this.startBtn.disabled = true;
+        
+        // Reset UI elements
+        if (this.modal) this.modal.classList.remove('show');
+        if (this.startBtn) this.startBtn.disabled = true;
         
         this.createShipList();
         this.renderBoards();
-        this.gameStatus.textContent = 'Place your ships to start';
-        this.turnIndicator.textContent = 'Your Turn';
-    }
+        
+        if (this.gameStatus) this.gameStatus.textContent = 'Place your ships to start';
+        if (this.turnIndicator) this.turnIndicator.textContent = 'Your Turn';
+        
+        console.log('Game reset complete');
+      }
 
     showGameOver(winner) {
+        console.log('Game over, winner:', winner);
         this.modalTitle.textContent = winner === 'human' ? 'Victory! 🎉' : 'Defeat! 💥';
         this.modalMessage.textContent = winner === 'human' 
             ? 'Congratulations! You sunk all enemy ships!'
             : 'The computer sunk all your ships. Better luck next time!';
         this.modal.classList.add('show');
+    }
+
+    attackComputer(x, y) {
+        console.log('Attacking computer at:', x, y);
+        
+        if (this.game.gameOver) {
+            console.log('Game is over, cannot attack');
+            return;
+        }
+    
+        if (this.game.currentPlayer !== 'human') {
+            console.log('Not human turn, current player:', this.game.currentPlayer);
+            this.gameStatus.textContent = `Not your turn! It's ${this.game.currentPlayer}'s turn.`;
+            return;
+        }
+    
+        const result = this.game.humanAttack([x, y]);
+        console.log('Attack result:', result);
+        
+        if (result.error) {
+            this.gameStatus.textContent = result.error;
+            return;
+        }
+    
+        this.renderBoards();
+        
+        // If game is over after human attack, show game over
+        if (result.gameOver) {
+            this.showGameOver(result.winner);
+        } else if (result.turnSwitched) {
+            // Only then trigger computer turn
+            this.updateGameStatus();
+        }
+    }
+    
+    updateGameStatus() {
+        const currentPlayer = this.game.currentPlayer;
+        this.turnIndicator.textContent = currentPlayer === 'human' ? 'Your Turn' : 'Computer\'s Turn';
+        console.log('Updating game status, current player:', currentPlayer);
+        
+        if (currentPlayer === 'computer' && !this.game.gameOver) {
+            this.gameStatus.textContent = 'Computer is thinking...';
+            console.log('Computer turn starting...');
+            
+            // Simulate computer thinking delay
+            setTimeout(() => {
+                console.log('Computer making attack...');
+                const result = this.game.computerAttack();
+                console.log('Computer attack result:', result);
+                
+                this.renderBoards();
+                
+                if (result && result.gameOver) {
+                    this.showGameOver(result.winner);
+                } else {
+                    // Update status again after computer move
+                    this.turnIndicator.textContent = 'Your Turn';
+                    this.gameStatus.textContent = 'Your turn - Attack enemy waters!';
+                }
+            }, 1000);
+        } else {
+            this.gameStatus.textContent = 'Your turn - Attack enemy waters!';
+        }
     }
 }

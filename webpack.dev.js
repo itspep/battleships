@@ -1,5 +1,6 @@
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = merge(common, {
   mode: 'development',
@@ -8,8 +9,14 @@ module.exports = merge(common, {
     static: './dist',
     open: true,
     hot: true,
-    port: 8080,
+    port: 8094,
     historyApiFallback: true,
   },
+  plugins: [
+    new HtmlWebpackPlugin({  // Add this plugin
+      template: './src/index.html',
+      filename: 'index.html',
+    }),
+  ],
   stats: 'minimal',
 });

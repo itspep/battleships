@@ -1,3 +1,4 @@
+import './styles/main.css';
 import Game from './modules/game.js';
 import DOM from './modules/dom.js';
 
