@@ -9,7 +9,7 @@ module.exports = merge(common, {
     static: './dist',
     open: true,
     hot: true,
-    port: 8096,
+    port: 8097,
     historyApiFallback: true,
   },
   plugins: [

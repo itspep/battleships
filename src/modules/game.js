@@ -171,24 +171,23 @@ export default class Game {
 initializeShips() {
     console.log('Initializing human ships...');
     
-    const humanShips = [
-        { length: 5, coordinates: [0, 5], direction: 'horizontal' },
-        { length: 4, coordinates: [2, 5], direction: 'horizontal' },
-        { length: 3, coordinates: [4, 5], direction: 'horizontal' },
-        { length: 3, coordinates: [6, 5], direction: 'horizontal' },
-        { length: 2, coordinates: [8, 5], direction: 'horizontal' }
-    ];
+    // Only initialize if no ships are placed
+    if (this.players.human.gameboard.ships.length === 0) {
+        const humanShips = [
+            { length: 5, coordinates: [0, 5], direction: 'horizontal' },
+            { length: 4, coordinates: [2, 5], direction: 'horizontal' },
+            { length: 3, coordinates: [4, 5], direction: 'horizontal' },
+            { length: 3, coordinates: [6, 5], direction: 'horizontal' },
+            { length: 2, coordinates: [8, 5], direction: 'horizontal' }
+        ];
 
-    // Clear existing ships first
-    this.players.human.gameboard.ships = [];
-    this.players.human.gameboard.shipPositions = new Map();
-    this.players.human.gameboard.allCoordinates = new Set();
-
-    humanShips.forEach(ship => {
-        this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
-    });
-
-    console.log('Human ships initialized:', this.players.human.gameboard.ships.length);
+        humanShips.forEach(ship => {
+            this.players.human.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
+        });
+        console.log('Default human ships initialized:', this.players.human.gameboard.ships.length);
+    } else {
+        console.log('Human ships already placed:', this.players.human.gameboard.ships.length);
+    }
 }
 
 }

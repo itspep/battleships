@@ -422,15 +422,15 @@ export default class DOM {
             console.log('Not all ships placed:', this.placedShips.size);
             return;
         }
-
-        this.game.initializeShips();
+    
+        // Only initialize computer ships, don't override human ships
+        this.game.initializeComputerShips();
         this.gameStatus.textContent = 'Game started! Attack enemy waters.';
         this.startBtn.disabled = true;
         this.renderBoards();
         this.updateGameStatus();
-        console.log('Game started successfully');
+        console.log('Game started successfully - Human ships:', this.game.players.human.gameboard.ships.length);
     }
-
 
     resetGame() {
         console.log('Resetting game...');
