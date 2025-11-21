@@ -148,24 +148,45 @@ export default class Game {
   }
 
   initializeComputerShips() {
-    const computerShips = [
-        { length: 5, coordinates: [0, 0], direction: 'horizontal' },
-        { length: 4, coordinates: [2, 0], direction: 'horizontal' },
-        { length: 3, coordinates: [4, 0], direction: 'horizontal' },
-        { length: 3, coordinates: [6, 0], direction: 'horizontal' },
-        { length: 2, coordinates: [8, 0], direction: 'horizontal' }
-    ];
-
+    console.log('🎲 Initializing random computer ships...');
+    
     // Clear existing ships first
     this.players.computer.gameboard.ships = [];
     this.players.computer.gameboard.shipPositions = new Map();
     this.players.computer.gameboard.allCoordinates = new Set();
 
-    computerShips.forEach(ship => {
-        this.players.computer.gameboard.placeShip(ship.length, ship.coordinates, ship.direction);
+    const ships = [
+        { length: 5, name: 'Carrier' },
+        { length: 4, name: 'Battleship' },
+        { length: 3, name: 'Cruiser' },
+        { length: 3, name: 'Submarine' },
+        { length: 2, name: 'Destroyer' }
+    ];
+
+    ships.forEach(ship => {
+        let placed = false;
+        let attempts = 0;
+        const maxAttempts = 500;
+        
+        while (!placed && attempts < maxAttempts) {
+            const x = Math.floor(Math.random() * 10);
+            const y = Math.floor(Math.random() * 10);
+            const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+            
+            try {
+                this.players.computer.gameboard.placeShip(ship.length, [x, y], direction);
+                placed = true;
+                console.log(`✅ Computer placed ${ship.name} at`, [x, y], direction);
+            } catch (error) {
+                attempts++;
+                if (attempts === maxAttempts) {
+                    console.error(`❌ Computer failed to place ${ship.name} after ${maxAttempts} attempts`);
+                }
+            }
+        }
     });
     
-    console.log('Computer ships initialized:', this.players.computer.gameboard.ships.length);
+    console.log('✅ Computer ships initialized:', this.players.computer.gameboard.ships.length);
 }
 
 initializeShips() {

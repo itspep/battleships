@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -152,14 +151,203 @@ body {
   background: #63b3ed;
 }
 
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-blue: #1a365d;
+  --secondary-blue: #2d3748;
+  --accent-blue: #3182ce;
+  --ocean-dark: #2c5282;
+  --ocean-light: #4299e1;
+  --hit-red: #e53e3e;
+  --miss-gray: #a0aec0;
+  --ship-color: #4a5568;
+  --text-light: #f7fafc;
+  --text-dark: #2d3748;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: var(--text-light);
+}
+
+/* Game Container */
+.game-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.game-header {
+  text-align: center;
+  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.game-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-header h1::before {
+  content: '⚓ ';
+}
+
+.game-header h1::after {
+  content: ' 🚢';
+}
+
+.game-info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.turn-indicator {
+  background: var(--accent-blue);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  box-shadow: var(--shadow);
+}
+
+.turn-indicator.human::before {
+  content: '🎯 ';
+}
+
+.turn-indicator.computer::before {
+  content: '🤖 ';
+}
+
+.game-status {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.game-status.placement::before {
+  content: '📍 ';
+}
+
+.game-status.battle::before {
+  content: '🎯 ';
+}
+
+.game-status.victory::before {
+  content: '🎉 ';
+}
+
+.game-status.defeat::before {
+  content: '💥 ';
+}
+
+/* Main Game Area */
+.game-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .game-main {
+      grid-template-columns: 1fr;
+  }
+}
+
+.board-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.board-section h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+  color: var(--text-light);
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Game Boards */
+.board {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  background: var(--ocean-dark);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  border: 3px solid var(--ocean-light);
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  background: var(--ocean-light);
+  border: 1px solid var(--ocean-dark);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .cell {
+      width: 25px;
+      height: 25px;
+  }
+}
+
+.cell:hover {
+  transform: scale(1.1);
+  background: #63b3ed;
+}
+
+/* Enhanced Cell Styles with Emojis */
 .cell.ship {
   background: var(--ship-color);
   border-color: #2d3748;
 }
 
-.cell.ship.placing {
-  background: #718096;
-  opacity: 0.7;
+.cell.ship::before {
+  content: '🚢';
+  font-size: 12px;
+  position: absolute;
 }
 
 .cell.hit {
@@ -170,6 +358,7 @@ body {
 .cell.hit::after {
   content: '💥';
   font-size: 14px;
+  animation: explode 0.3s ease-out;
 }
 
 .cell.miss {
@@ -178,9 +367,28 @@ body {
 }
 
 .cell.miss::after {
-  content: '•';
-  color: white;
-  font-size: 18px;
+  content: '🌊';
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.cell.ship.hit {
+  background: linear-gradient(45deg, var(--hit-red), #ff6b6b);
+}
+
+.cell.ship.hit::after {
+  content: '💥🔥';
+  font-size: 12px;
+}
+
+.cell.ship.sunk {
+  background: linear-gradient(45deg, #7f1d1d, #dc2626);
+  animation: sink 2s ease-in-out;
+}
+
+.cell.ship.sunk::after {
+  content: '⚰️';
+  font-size: 14px;
 }
 
 .cell.invalid {
@@ -192,7 +400,7 @@ body {
   background: #90cdf4;
 }
 
-/* Ship Status */
+/* Ship Status with Emojis */
 .ship-status {
   display: flex;
   gap: 10px;
@@ -203,10 +411,10 @@ body {
 .ship-status-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.2);
-  padding: 5px 10px;
-  border-radius: 15px;
+  padding: 8px 12px;
+  border-radius: 20px;
   font-size: 0.9rem;
 }
 
@@ -215,10 +423,24 @@ body {
   height: 10px;
   background: var(--ship-color);
   border-radius: 2px;
+  position: relative;
+}
+
+.ship-indicator::before {
+  content: '🚢';
+  font-size: 8px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .ship-indicator.sunk {
   background: var(--hit-red);
+}
+
+.ship-indicator.sunk::before {
+  content: '💀';
 }
 
 /* Controls */
@@ -258,12 +480,21 @@ body {
   transition: all 0.2s ease;
 }
 
+.ship-item::before {
+  content: '🚢 ';
+  font-size: 14px;
+}
+
 .ship-item:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
 .ship-item.placing {
   background: var(--accent-blue);
+}
+
+.ship-item.placing::before {
+  content: '🎯 ';
 }
 
 .ship-preview {
@@ -374,20 +605,47 @@ button:disabled {
   margin-bottom: 15px;
 }
 
+.modal-content h2::before {
+  content: '🎮 ';
+}
+
+#modalTitle.victory::before {
+  content: '🎉 ';
+}
+
+#modalTitle.defeat::before {
+  content: '💥 ';
+}
+
+#modalTitle.tie::before {
+  content: '🤝 ';
+}
+
 .modal-content p {
   font-size: 1.2rem;
   margin-bottom: 25px;
 }
 
-/* Animations */
+/* Attack Feedback */
+.attack-feedback {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  z-index: 1000;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+/* Enhanced Animations */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
-}
-
-.pulse {
-  animation: pulse 2s infinite;
 }
 
 @keyframes fadeIn {
@@ -395,6 +653,46 @@ button:disabled {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes explode {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sink {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(3px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -40%); }
+  20% { opacity: 1; transform: translate(-50%, -50%); }
+  80% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -60%); }
+}
+
+@keyframes victoryPulse {
+  0% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  50% { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); }
+  100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
 .fade-in {
   animation: fadeIn 0.5s ease-out;
+}
+
+/* Victory celebration */
+.victory-celebration {
+  animation: victoryPulse 2s infinite;
 }

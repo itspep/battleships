@@ -1,4 +1,790 @@
-export default class DOM {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battleship 🚢⚓</title>
+
+</head>
+<body>
+    <div class="game-container">
+        <!-- Game Header -->
+        <header class="game-header">
+            <h1>Battleship</h1>
+            <div class="game-info">
+                <div class="turn-indicator" id="turnIndicator">Your Turn</div>
+                <div class="game-status" id="gameStatus">Place your ships to start</div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-main">
+            <!-- Player Board -->
+            <section class="board-section">
+                <h2>Your Fleet</h2>
+                <div class="board-container">
+                    <div class="board" id="playerBoard"></div>
+                    <div class="ship-status" id="playerShipStatus"></div>
+                </div>
+            </section>
+
+            <!-- Computer Board -->
+            <section class="board-section">
+                <h2>Enemy Waters</h2>
+                <div class="board-container">
+                    <div class="board" id="computerBoard"></div>
+                    <div class="ship-status" id="computerShipStatus"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Controls -->
+        <footer class="game-controls">
+            <div class="ship-placement" id="shipPlacement">
+                <h3>Place Your Ships</h3>
+                <div class="ship-list" id="shipList"></div>
+                <div class="placement-controls">
+                    <button id="rotateBtn">Rotate Ship (R)</button>
+                    <button id="randomBtn">Randomize All</button>
+                </div>
+            </div>
+            
+            <div class="game-buttons">
+                <button id="startBtn" disabled>Start Game</button>
+                <button id="resetBtn">Reset Game</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Game Over</h2>
+            <p id="modalMessage"></p>
+            <button id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  :root {
+    --primary-blue: #1a365d;
+    --secondary-blue: #2d3748;
+    --accent-blue: #3182ce;
+    --ocean-dark: #2c5282;
+    --ocean-light: #4299e1;
+    --hit-red: #e53e3e;
+    --miss-gray: #a0aec0;
+    --ship-color: #4a5568;
+    --text-light: #f7fafc;
+    --text-dark: #2d3748;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--text-light);
+  }
+  
+  /* Game Container */
+  .game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header */
+  .game-header {
+    text-align: center;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .game-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .game-info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .turn-indicator {
+    background: var(--accent-blue);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    box-shadow: var(--shadow);
+  }
+  
+  .game-status {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  
+  /* Main Game Area */
+  .game-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    .game-main {
+        grid-template-columns: 1fr;
+    }
+  }
+  
+  .board-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .board-section h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: var(--text-light);
+  }
+  
+  .board-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  /* Game Boards */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+    background: var(--ocean-dark);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--ocean-light);
+  }
+  
+  .cell {
+    width: 30px;
+    height: 30px;
+    background: var(--ocean-light);
+    border: 1px solid var(--ocean-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
+    .cell {
+        width: 25px;
+        height: 25px;
+    }
+  }
+  
+  .cell:hover {
+    transform: scale(1.1);
+    background: #63b3ed;
+  }
+  
+  /* Reset and Base Styles */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  :root {
+    --primary-blue: #1a365d;
+    --secondary-blue: #2d3748;
+    --accent-blue: #3182ce;
+    --ocean-dark: #2c5282;
+    --ocean-light: #4299e1;
+    --hit-red: #e53e3e;
+    --miss-gray: #a0aec0;
+    --ship-color: #4a5568;
+    --text-light: #f7fafc;
+    --text-dark: #2d3748;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--text-light);
+  }
+  
+  /* Game Container */
+  .game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header */
+  .game-header {
+    text-align: center;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .game-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .game-header h1::before {
+    content: '⚓ ';
+  }
+  
+  .game-header h1::after {
+    content: ' 🚢';
+  }
+  
+  .game-info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .turn-indicator {
+    background: var(--accent-blue);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    box-shadow: var(--shadow);
+  }
+  
+  .turn-indicator.human::before {
+    content: '🎯 ';
+  }
+  
+  .turn-indicator.computer::before {
+    content: '🤖 ';
+  }
+  
+  .game-status {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  
+  .game-status.placement::before {
+    content: '📍 ';
+  }
+  
+  .game-status.battle::before {
+    content: '🎯 ';
+  }
+  
+  .game-status.victory::before {
+    content: '🎉 ';
+  }
+  
+  .game-status.defeat::before {
+    content: '💥 ';
+  }
+  
+  /* Main Game Area */
+  .game-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    .game-main {
+        grid-template-columns: 1fr;
+    }
+  }
+  
+  .board-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .board-section h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: var(--text-light);
+  }
+  
+  .board-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  /* Game Boards */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+    background: var(--ocean-dark);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--ocean-light);
+  }
+  
+  .cell {
+    width: 30px;
+    height: 30px;
+    background: var(--ocean-light);
+    border: 1px solid var(--ocean-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    position: relative;
+  }
+  
+  @media (max-width: 768px) {
+    .cell {
+        width: 25px;
+        height: 25px;
+    }
+  }
+  
+  .cell:hover {
+    transform: scale(1.1);
+    background: #63b3ed;
+  }
+  
+  /* Enhanced Cell Styles with Emojis */
+  .cell.ship {
+    background: var(--ship-color);
+    border-color: #2d3748;
+  }
+  
+  .cell.ship::before {
+    content: '🚢';
+    font-size: 12px;
+    position: absolute;
+  }
+  
+  .cell.hit {
+    background: var(--hit-red);
+    border-color: #c53030;
+  }
+  
+  .cell.hit::after {
+    content: '💥';
+    font-size: 14px;
+    animation: explode 0.3s ease-out;
+  }
+  
+  .cell.miss {
+    background: var(--miss-gray);
+    border-color: #718096;
+  }
+  
+  .cell.miss::after {
+    content: '🌊';
+    font-size: 12px;
+    opacity: 0.8;
+  }
+  
+  .cell.ship.hit {
+    background: linear-gradient(45deg, var(--hit-red), #ff6b6b);
+  }
+  
+  .cell.ship.hit::after {
+    content: '💥🔥';
+    font-size: 12px;
+  }
+  
+  .cell.ship.sunk {
+    background: linear-gradient(45deg, #7f1d1d, #dc2626);
+    animation: sink 2s ease-in-out;
+  }
+  
+  .cell.ship.sunk::after {
+    content: '⚰️';
+    font-size: 14px;
+  }
+  
+  .cell.invalid {
+    background: #fed7d7;
+    border-color: #feb2b2;
+  }
+  
+  #computerBoard .cell:not(.hit):not(.miss):hover {
+    background: #90cdf4;
+  }
+  
+  /* Ship Status with Emojis */
+  .ship-status {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .ship-status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+  
+  .ship-indicator {
+    width: 20px;
+    height: 10px;
+    background: var(--ship-color);
+    border-radius: 2px;
+    position: relative;
+  }
+  
+  .ship-indicator::before {
+    content: '🚢';
+    font-size: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .ship-indicator.sunk {
+    background: var(--hit-red);
+  }
+  
+  .ship-indicator.sunk::before {
+    content: '💀';
+  }
+  
+  /* Controls */
+  .game-controls {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .ship-placement {
+    margin-bottom: 20px;
+  }
+  
+  .ship-placement h3 {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .ship-list {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+  
+  .ship-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .ship-item::before {
+    content: '🚢 ';
+    font-size: 14px;
+  }
+  
+  .ship-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .ship-item.placing {
+    background: var(--accent-blue);
+  }
+  
+  .ship-item.placing::before {
+    content: '🎯 ';
+  }
+  
+  .ship-preview {
+    display: flex;
+    gap: 2px;
+  }
+  
+  .ship-segment {
+    width: 12px;
+    height: 12px;
+    background: var(--ship-color);
+    border-radius: 2px;
+  }
+  
+  .placement-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  /* Buttons */
+  button {
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+  }
+  
+  button:hover {
+    background: #2c5aa0;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button:disabled {
+    background: var(--miss-gray);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .game-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  #startBtn {
+    background: #38a169;
+  }
+  
+  #startBtn:hover:not(:disabled) {
+    background: #2f855a;
+  }
+  
+  #resetBtn {
+    background: var(--hit-red);
+  }
+  
+  #resetBtn:hover {
+    background: #c53030;
+  }
+  
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal.show {
+    display: flex;
+  }
+  
+  .modal-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    max-width: 400px;
+    width: 90%;
+  }
+  
+  .modal-content h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+  
+  .modal-content h2::before {
+    content: '🎮 ';
+  }
+  
+  #modalTitle.victory::before {
+    content: '🎉 ';
+  }
+  
+  #modalTitle.defeat::before {
+    content: '💥 ';
+  }
+  
+  #modalTitle.tie::before {
+    content: '🤝 ';
+  }
+  
+  .modal-content p {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+  }
+  
+  /* Attack Feedback */
+  .attack-feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    z-index: 1000;
+    animation: fadeInOut 2s ease-in-out;
+  }
+  
+  /* Enhanced Animations */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes explode {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes sink {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(3px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-2px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -40%); }
+    20% { opacity: 1; transform: translate(-50%, -50%); }
+    80% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -60%); }
+  }
+  
+  @keyframes victoryPulse {
+    0% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    50% { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); }
+    100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  }
+  
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Victory celebration */
+  .victory-celebration {
+    animation: victoryPulse 2s infinite;
+  }
+
+
+
+
+
+  export default class DOM {
     constructor(game) {
         this.game = game;
         this.initializeElements();
@@ -268,12 +1054,12 @@ export default class DOM {
             this.showAttackFeedback('Please select a ship first!', '❌');
             return;
         }
-    
+
         if (this.placedShips.has(this.currentShip.name)) {
             console.log('✅ Ship already placed:', this.currentShip.name);
             return;
         }
-    
+
         try {
             this.game.players.human.gameboard.placeShip(
                 this.currentShip.length,
@@ -286,15 +1072,6 @@ export default class DOM {
             this.showAttackFeedback(`${this.currentShip.name} placed!`, '✅');
             this.renderPlayerBoard();
             
-            // Enable start button when all 5 ships are placed
-            if (this.placedShips.size === 5) {
-                this.startBtn.disabled = false;
-                this.startBtn.textContent = '🚀 Start Game';
-                this.gameStatus.textContent = '🎉 All ships placed! Click "Start Game" to begin.';
-                this.gameStatus.className = 'game-status victory';
-                console.log('🎉 All ships placed - Start button enabled');
-            }
-            
             // Select next unplaced ship
             const nextShip = Array.from(document.querySelectorAll('.ship-item'))
                 .find(item => !this.placedShips.has(item.dataset.name));
@@ -306,6 +1083,9 @@ export default class DOM {
                 });
             } else {
                 this.currentShip = null;
+                this.startBtn.disabled = false;
+                this.gameStatus.textContent = '🎉 All ships placed! Click "Start Game" to begin.';
+                this.gameStatus.className = 'game-status victory';
                 console.log('🎉 All ships placed');
             }
         } catch (error) {
@@ -313,7 +1093,7 @@ export default class DOM {
             this.showAttackFeedback('Invalid placement! Try different coordinates.', '❌');
         }
     }
-    
+
     randomizeShips() {
         console.log('🎲 Randomizing ships...');
         
@@ -330,9 +1110,7 @@ export default class DOM {
             { name: 'Submarine', length: 3 },
             { name: 'Destroyer', length: 2 }
         ];
-    
-        let successfulPlacements = 0;
-    
+
         ships.forEach(ship => {
             let placed = false;
             let attempts = 0;
@@ -347,7 +1125,6 @@ export default class DOM {
                     this.game.players.human.gameboard.placeShip(ship.length, [x, y], direction);
                     this.placedShips.add(ship.name);
                     placed = true;
-                    successfulPlacements++;
                     console.log('✅ Random placement successful:', ship.name, 'at', x, y, direction);
                 } catch (error) {
                     attempts++;
@@ -357,24 +1134,20 @@ export default class DOM {
                 }
             }
         });
-    
+
         this.renderPlayerBoard();
+        this.startBtn.disabled = this.placedShips.size === ships.length;
         
-        // Enable start button if all ships were placed successfully
-        if (successfulPlacements === 5) {
-            this.startBtn.disabled = false;
-            this.startBtn.textContent = '🚀 Start Game';
+        if (this.placedShips.size === ships.length) {
             this.gameStatus.textContent = '🎉 Ships randomly placed! Click "Start Game" to begin.';
             this.gameStatus.className = 'game-status victory';
             this.showAttackFeedback('All ships placed successfully!', '🎉');
-            console.log('✅ All ships randomly placed - Start button enabled');
         } else {
-            this.startBtn.disabled = true;
-            this.gameStatus.textContent = `⚠️ Only ${successfulPlacements}/5 ships placed. Try again.`;
-            this.showAttackFeedback(`Could only place ${successfulPlacements}/5 ships. Try again.`, '⚠️');
+            this.gameStatus.textContent = `⚠️ Only ${this.placedShips.size}/${ships.length} ships placed. Try again.`;
+            this.showAttackFeedback('Could not place all ships. Try again.', '⚠️');
         }
         
-        console.log('✅ Random placement complete:', successfulPlacements, 'ships placed');
+        console.log('✅ Random placement complete:', this.placedShips.size, 'ships placed');
     }
 
     attackComputer(x, y) {
@@ -532,35 +1305,24 @@ export default class DOM {
 
     startGame() {
         console.log('🚀 Starting game...');
-        console.log('📊 Placed ships count:', this.placedShips.size);
         
         if (this.placedShips.size < 5) {
-            this.gameStatus.textContent = '❌ Place all 5 ships before starting!';
+            this.gameStatus.textContent = '❌ Place all ships before starting!';
             this.gameStatus.className = 'game-status defeat';
             console.log('❌ Not all ships placed:', this.placedShips.size);
-            this.showAttackFeedback(`Place all 5 ships! (${this.placedShips.size}/5)`, '❌');
+            this.showAttackFeedback('Place all ships first!', '❌');
             return;
         }
-    
-        try {
-            // Only initialize computer ships, don't override human ships
-            this.game.initializeComputerShips();
-            this.gameStatus.textContent = '🎮 Game started! Attack enemy waters.';
-            this.gameStatus.className = 'game-status battle';
-            this.startBtn.disabled = true;
-            this.renderBoards();
-            this.updateGameStatus();
-            this.showAttackFeedback('Game Started!', '🎮');
-            console.log('✅ Game started successfully');
-            console.log('📊 Human ships:', this.game.players.human.gameboard.ships.length);
-            console.log('📊 Computer ships:', this.game.players.computer.gameboard.ships.length);
-        } catch (error) {
-            console.error('❌ Error starting game:', error);
-            this.gameStatus.textContent = '❌ Error starting game!';
-            this.showAttackFeedback('Error starting game!', '❌');
-        }
 
-        this.debugShipPlacement(); // Temporary debug
+        // Only initialize computer ships, don't override human ships
+        this.game.initializeComputerShips();
+        this.gameStatus.textContent = '🎮 Game started! Attack enemy waters.';
+        this.gameStatus.className = 'game-status battle';
+        this.startBtn.disabled = true;
+        this.renderBoards();
+        this.updateGameStatus();
+        this.showAttackFeedback('Game Started!', '🎮');
+        console.log('✅ Game started successfully - Human ships:', this.game.players.human.gameboard.ships.length);
     }
 
     resetGame() {
@@ -574,10 +1336,7 @@ export default class DOM {
         
         // Reset UI elements
         if (this.modal) this.modal.classList.remove('show');
-        if (this.startBtn) {
-            this.startBtn.disabled = true;
-            this.startBtn.textContent = 'Start Game';
-        }
+        if (this.startBtn) this.startBtn.disabled = true;
         if (this.rotateBtn) this.rotateBtn.textContent = '🔄 Rotate Ship (R)';
         
         this.createShipList();
@@ -624,17 +1383,5 @@ export default class DOM {
             
             this.modal.classList.add('show');
         }, 2000);
-    }
-
-    debugShipPlacement() {
-        console.log('🔍 DEBUG - Ship Placement:');
-        console.log('Human ships:', this.game.players.human.gameboard.ships.length);
-        console.log('Computer ships:', this.game.players.computer.gameboard.ships.length);
-        
-        // Log computer ship positions
-        this.game.players.computer.gameboard.ships.forEach((ship, index) => {
-            const coords = this.game.players.computer.gameboard.getShipCoordinates(ship);
-            console.log(`Computer ship ${index + 1}:`, coords);
-        });
     }
 }
